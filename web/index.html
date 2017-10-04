@@ -13,51 +13,49 @@
     <body>
   		<script src="jquery.js"></script>
    		<script src="javascript.js"></script>
-      <script src="bootstrap/dist/js/bootstrap.min.js"></script>
+      	<script src="bootstrap/dist/js/bootstrap.min.js"></script>
 
 
-  		<h1>Project name</h1>
-		<div id = "sub">Subscribe</div>
-		<div id = "unsub">Unsubscribe</div>
-      <div class="container">
-        <div class="row">
-          <div class="col-12">Initialized</div>
-        </div>
-        <div class="row">
-          <div class="col-4">Left cam <div id="leftCameraRate">No value</div> </div>
-          <div class="col-4">Mid cam <div id="midCameraRate">No value</div></div>
-          <div class="col-4">Right cam</div>
-        </div>
-        <div class="row">
-          <div class="col-3">Accel.</div>
-          <div class="col-3">aX</div>
-          <div class="col-3">aY</div>
-          <div class="col-3">aZ</div>
-        </div>
-        <div class="row">
-          <div class="col-3">Gyro</div>
-          <div class="col-3">wX</div>
-          <div class="col-3">wY</div>
-          <div class="col-3">wZ</div>
-        </div>
-        <div class="row">
-          <div class="col-4">Bat</div>
-          <div class="col-4">Lidar</div>
-          <div class="col-4">CPU</div>
-        </div>
-        <div class="row">
-          <div class="col-4">GPS fixed</div>
-          <div class="col-4">Lat</div>
-          <div class="col-4">Lon</div>
-        </div>
-        <div class="row">
-          <div class="col-4">Disk space</div>
-          <div class="col-4"></div>
-          <div class="col-4"></div>
-        </div>
-      </div>
-	<canvas id="birdsChart" width="600" height="400"></canvas>
-	<img id = "image1" src="" alt="">
-	<div id = "image"></div>
+  		<h1>Special problem</h1>
+		  <div class="container">
+		    <div class="row">
+		      <div class="col-12 active">Initialized</div>
+		    </div>
+		    <div class="row">
+		      <div class="col-4 Lcam" id="leftCameraRate">Left cam <div class="topicValue" id="leftCameraRateValue">No value</div> </div>
+		      <div class="col-4 Mcam" id="middleCameraRate">Mid cam <div class="topicValue" id="middleCameraRateValue">No value</div></div>
+		      <div class="col-4 Rcam" id="rightCameraRate">Right cam <div class="topicValue" id="rightCameraRateValue">No value</div></div>
+		    </div>
+		    <div class="row">
+		      <div class="col-3 " id="accel">Accel.</div>
+		      <div class="col-3 ">aX</div>
+		      <div class="col-3 ">aY</div>
+		      <div class="col-3 ">aZ</div>
+		    </div>
+		    <div class="row">
+		      <div class="col-3 " id="gyro">Gyro</div>
+		      <div class="col-3 ">wX</div>
+		      <div class="col-3 ">wY</div>
+		      <div class="col-3 ">wZ</div>
+		    </div>
+		    <div class="row">
+		      <div class="col-4 " id="batteryPercentage">Bat %</div>
+		      <div class="col-4 " id="batteryVoltage">Bat voltage</div>
+		      <div class="col-4 " id="cpu">CPU</div>
+		    </div>
+		    <div class="row">
+		      <div class="col-4 " id="gps">GPS fixed</div>
+		      <div class="col-4 Position">Lat</div>
+		      <div class="col-4 Position">Lon</div>
+		    </div>
+		    <div class="row">
+		      <div class="col-4 " id="diskSpaceAvailable">Disk space available</div>
+		      <div class="col-4 " id="diskSpacePercentage">Disk space %</div>
+			  <div class="col-4 Lidar" id="lidar">Lidar</div>
+		      
+		    </div>
+		  </div>
+		<img id = "image" src="" alt="">
+		<canvas id="polarCanvas" width="600" height="400"></canvas>
     </body>
 </html>

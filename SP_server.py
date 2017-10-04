@@ -16,7 +16,15 @@ lCamRate = None
 mCamRate = None
 rCamRate = None
 mCamImage = None
-subscribers = {'leftCam': None, 'middleCam': None, 'rightCam': None}
+subscribers = {'leftCameraRate': None, 'middleCameraImage': None, 'middleCameraRate': None, 'rightCameraRate': None}
+
+class CustomSubscriber:
+    def __init__(self, topicName, topicType, callback, subscriber = None):
+        self.topicName = topicName
+     	self.topicType = topicType
+	self.callback = callback
+        self.subscriber = rospy.Subscriber(topicName, topicType, callback)
+      
 class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
@@ -29,38 +37,35 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	referer = self.headers.get('Referer')
 	print self.path
 
-	if self.path == '/getLCamRate':
+	if self.path == '/getLeftCameraRate':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             data = {}
-	    global lCamRate
-	    if lCamRate is not None:
-	    	data['test'] = lCamRate
+	    if datas['leftCameraRate'] is not None:
+	    	data['rate'] = datas['leftCameraRate']
 	    json_data = json.dumps(data)
 	    self.wfile.write(json_data)
 	    return
 
-	if self.path == '/getMCamRate':
+	if self.path == '/getMiddleCameraRate':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             data = {}
-	    global mCamRate
-	    if mCamRate is not None:
-	    	data['test'] = mCamRate
+	    if datas['middleCameraRate'] is not None:
+	    	data['rate'] = datas['middleCameraRate']
 	    json_data = json.dumps(data)
 	    self.wfile.write(json_data)
 	    return
 
-	if self.path == '/getMCamImage':
+	if self.path == '/getMiddleCameraImage':
             self.send_response(200)
             self.send_header('Content-Type', 'image/jpeg')
             self.end_headers()
             data = {}
-	    global mCamImage
-	    if mCamImage is not None:
-	    	data = mCamImage
+	    if datas['middleCameraImage'] is not None:
+	    	data = datas['middleCameraImage']
 	    self.wfile.write(data)
 	    return
 	else:
@@ -72,42 +77,43 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_POST(self):
 
 	if self.path == '/unsub':
+	    print 'unsubscribing'
 	    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
-	    subscribers[parse_qs(self.data_string)['key'][0]].unregister()
+	    print self.data_string
+	    subscribers[parse_qs(self.data_string)['key'][0]].subscriber.unregister()
 	if self.path == '/sub':
 	    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
-	    subscribers[parse_qs(self.data_string)['key'][0]] = rospy.Subscriber('vrep/visionSensor/compressed', CompressedImage, middleCameraCallback)
+	    customSub = subscribers[parse_qs(self.data_string)['key'][0]]
+	    subscribers[parse_qs(self.data_string)['key'][0]] = CustomSubscriber(customSub.topicName,customSub.topicType, customSub.callback)
 	
 
-previousTimes = {'leftCam': None, 'middleCam': None, 'rightCam': None}
+previousTimes = {'leftCameraRate': None, 'middleCameraRate': None, 'rightCameraRate': None}
+datas = {'leftCameraRate': None, 'middleCameraRate': None, 'rightCameraRate': None, 'middleCameraImage': None}
 def leftCameraRateCallback(data):
-    global lCamRate
-    lCamRate = getRate('leftCam')
-    rospy.loginfo('Left camera rate: %s', lCamRate)
+    datas['leftCameraRate'] = getRate('leftCameraRate')
+    rospy.loginfo('Left camera rate: %s', datas['leftCameraRate'])
 
 def middleCameraRateCallback(data):
-    global mCamRate
-    mCamRate = getRate('middleCam')
-    rospy.loginfo('Middle camera rate: %s', mCamRate)
+    datas['middleCameraRate'] = getRate('middleCameraRate')
+    #rospy.loginfo('Middle camera rate: %s', datas['middleCameraRate'])
 
-def middleCameraCallback(data):
+def middleCameraImageCallback(data):
     #rospy.loginfo(rospy.get_caller_id() + 'I heard from mid %s', data)
     #rospy.loginfo(rospy.get_caller_id() + 'I received datas')
-    global mCamImage
-    mCamImage = data
+    datas['middleCameraImage'] = data
 
 def rightCameraRateCallback(data):
-    global mCamRate
-    mCamRate = getRate('rightCam')
-    rospy.loginfo('Right camera rate: %s', mCamRate)
+    datas['rightCameraRate'] = getRate('rightCameraRate')
+    rospy.loginfo('Right camera rate: %s', datas['rightCameraRate'])
 
 def subscribeToTopics():
     rospy.init_node('listener', anonymous=True)
-    #rospy.Subscriber('MCamRate', String, mCamRateCallback)
+    #rospy.Subscriber('MiddleCameraRate', String, middleCameraRateCallback)
     
-    subscribers['middleCam'] = rospy.Subscriber('vrep/visionSensor/compressed', CompressedImage, middleCameraCallback)
-    rospy.Subscriber('LCamRate', String, leftCameraRateCallback)
-    rospy.Subscriber('RCamRate', String, rightCameraRateCallback)
+    subscribers['middleCameraImage'] = CustomSubscriber('vrep/visionSensor/compressed',CompressedImage, middleCameraImageCallback)
+    subscribers['leftCameraRate'] = CustomSubscriber('leftCameraRate',String, leftCameraRateCallback)
+    subscribers['rightCameraRate'] = CustomSubscriber('rightCameraRate',String, rightCameraRateCallback)
+    subscribers['middleCameraRate'] = CustomSubscriber('vrep/visionSensor/compressed',CompressedImage, middleCameraRateCallback)
 
 def getRate(key):
     rate = 0
@@ -120,7 +126,7 @@ def getRate(key):
         previousTimes[key] = rospy.Time.now()  
     return rate
 
-def run(server_class=HTTPServer, handler_class=SPRequestHandler, port=8089, server_ip='192.93.8.109'):
+def run(server_class=HTTPServer, handler_class=SPRequestHandler, port=8089, server_ip='192.93.8.105'):
     subscribeToTopics()
     web_dir = os.path.join(os.path.dirname(__file__), 'web')
     os.chdir(web_dir)

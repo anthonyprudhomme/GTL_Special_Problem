@@ -8,13 +8,27 @@ body {
 }
 [class*="col-"], footer {
   color: white;
+  border-top: 1px solid rgb(200, 200, 200);
+  border-right: 1px solid black;
+  line-height: 40px;
+  text-align: center;
   background: grey; /* For browsers that do not support gradients */
   background: -webkit-linear-gradient(rgb(42, 42, 42),rgb(66, 66, 66)); /* For Safari 5.1 to 6.0 */
   background: -o-linear-gradient(rgb(42, 42, 42),rgb(66, 66, 66)); /* For Opera 11.1 to 12.0 */
   background: -moz-linear-gradient(rgb(42, 42, 42),rgb(66, 66, 66)); /* For Firefox 3.6 to 15 */
   background: linear-gradient(rgb(42, 42, 42),rgb(66, 66, 66)); /* Standard syntax (must be last) */
-  border-top: 1px solid rgb(200, 200, 200);
-  border-right: 1px solid black;
-  line-height: 40px;
-  text-align: center;
 }
+
+.inactive{
+  background: grey; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(rgb(120, 120, 120),rgb(150, 150, 150)); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(rgb(120, 120, 120),rgb(150, 150, 150)); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(rgb(120, 120, 120),rgb(150, 150, 150)); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(rgb(120, 120, 120),rgb(150, 150, 150)); /* Standard syntax (must be last) */
+}
+
+.topicValue{
+  font-size: 120%;
+}
+
+
