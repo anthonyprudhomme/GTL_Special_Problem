@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" type="text/css" href="style.css"/>
+    	<link rel="stylesheet" type="text/css" href="bootstrap/dist/css/bootstrap.min.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="Chart.bundle.js"></script>
+
+        <title>Special Problem App</title>
+    </head>
+
+    <body>
+  		<script src="jquery.js"></script>
+   		<script src="javascript.js"></script>
+      <script src="bootstrap/dist/js/bootstrap.min.js"></script>
+
+
+  		<h1>Project name</h1>
+		<div id = "sub">Subscribe</div>
+		<div id = "unsub">Unsubscribe</div>
+      <div class="container">
+        <div class="row">
+          <div class="col-12">Initialized</div>
+        </div>
+        <div class="row">
+          <div class="col-4">Left cam <div id="leftCameraRate">No value</div> </div>
+          <div class="col-4">Mid cam <div id="midCameraRate">No value</div></div>
+          <div class="col-4">Right cam</div>
+        </div>
+        <div class="row">
+          <div class="col-3">Accel.</div>
+          <div class="col-3">aX</div>
+          <div class="col-3">aY</div>
+          <div class="col-3">aZ</div>
+        </div>
+        <div class="row">
+          <div class="col-3">Gyro</div>
+          <div class="col-3">wX</div>
+          <div class="col-3">wY</div>
+          <div class="col-3">wZ</div>
+        </div>
+        <div class="row">
+          <div class="col-4">Bat</div>
+          <div class="col-4">Lidar</div>
+          <div class="col-4">CPU</div>
+        </div>
+        <div class="row">
+          <div class="col-4">GPS fixed</div>
+          <div class="col-4">Lat</div>
+          <div class="col-4">Lon</div>
+        </div>
+        <div class="row">
+          <div class="col-4">Disk space</div>
+          <div class="col-4"></div>
+          <div class="col-4"></div>
+        </div>
+      </div>
+	<canvas id="birdsChart" width="600" height="400"></canvas>
+	<img id = "image1" src="" alt="">
+	<div id = "image"></div>
+    </body>
+</html>
