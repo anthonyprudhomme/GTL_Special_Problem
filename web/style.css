@@ -28,7 +28,13 @@ body {
 }
 
 .topicValue{
+  font-size: 140%;
+  text-align: right;
+}
+
+.label{
   font-size: 120%;
+  text-align: left;
 }
 
 

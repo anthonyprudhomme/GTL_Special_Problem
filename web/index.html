@@ -1,61 +1,115 @@
+
+
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" type="text/css" href="style.css"/>
-    	<link rel="stylesheet" type="text/css" href="bootstrap/dist/css/bootstrap.min.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-	<script src="Chart.bundle.js"></script>
-
-        <title>Special Problem App</title>
-    </head>
-
-    <body>
-  		<script src="jquery.js"></script>
-   		<script src="javascript.js"></script>
-      	<script src="bootstrap/dist/js/bootstrap.min.js"></script>
-
-
-  		<h1>Special problem</h1>
-		  <div class="container">
-		    <div class="row">
-		      <div class="col-12 active">Initialized</div>
-		    </div>
-		    <div class="row">
-		      <div class="col-4 Lcam" id="leftCameraRate">Left cam <div class="topicValue" id="leftCameraRateValue">No value</div> </div>
-		      <div class="col-4 Mcam" id="middleCameraRate">Mid cam <div class="topicValue" id="middleCameraRateValue">No value</div></div>
-		      <div class="col-4 Rcam" id="rightCameraRate">Right cam <div class="topicValue" id="rightCameraRateValue">No value</div></div>
-		    </div>
-		    <div class="row">
-		      <div class="col-3 " id="accel">Accel.</div>
-		      <div class="col-3 ">aX</div>
-		      <div class="col-3 ">aY</div>
-		      <div class="col-3 ">aZ</div>
-		    </div>
-		    <div class="row">
-		      <div class="col-3 " id="gyro">Gyro</div>
-		      <div class="col-3 ">wX</div>
-		      <div class="col-3 ">wY</div>
-		      <div class="col-3 ">wZ</div>
-		    </div>
-		    <div class="row">
-		      <div class="col-4 " id="batteryPercentage">Bat %</div>
-		      <div class="col-4 " id="batteryVoltage">Bat voltage</div>
-		      <div class="col-4 " id="cpu">CPU</div>
-		    </div>
-		    <div class="row">
-		      <div class="col-4 " id="gps">GPS fixed</div>
-		      <div class="col-4 Position">Lat</div>
-		      <div class="col-4 Position">Lon</div>
-		    </div>
-		    <div class="row">
-		      <div class="col-4 " id="diskSpaceAvailable">Disk space available</div>
-		      <div class="col-4 " id="diskSpacePercentage">Disk space %</div>
-			  <div class="col-4 Lidar" id="lidar">Lidar</div>
-		      
-		    </div>
-		  </div>
-		<img id = "image" src="" alt="">
-		<canvas id="polarCanvas" width="600" height="400"></canvas>
-    </body>
+   <head>
+      <meta charset="utf-8" />
+      <link rel="stylesheet" type="text/css" href="style.css"/>
+      <link rel="stylesheet" type="text/css" href="bootstrap/dist/css/bootstrap.min.css">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <script src="Chart.bundle.js"></script>
+      <title>Special Problem App</title>
+   </head>
+   <body>
+      <script src="jquery.js"></script>
+      <script src="javascript.js"></script>
+      <script src="bootstrap/dist/js/bootstrap.min.js"></script>
+      <div class="container">
+         <div class="row">
+            <div class="col-12">
+               <h1>Special problem</h1>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-12">Initialized</div>
+         </div>
+         <div class="row">
+            <div class="col-4 Lcam" id="leftCameraRate">
+               <span class="float-md-left" > Left cam </span>
+               <span class="float-md-right topicValue" id="leftCameraRateValue">No value</span>
+            </div>
+            <div class="col-4 Mcam" id="vrep/visionSensor/compressed">
+               <span class="float-md-left" > Middle cam </span>
+               <span class="float-md-right topicValue" id="vrep/visionSensor/compressed0">No value</span>
+            </div>
+            <div class="col-4 Rcam" id="rightCameraRate">
+               <span class="float-md-left" > Right cam </span>
+               <span class="float-md-right topicValue" id="rightCameraRateValue">No value</span>
+            </div>
+         </div>
+         <div id="vectornav/imu4">
+            <div class="row">
+               <div class="col-3 " id="vectornav/imu">Accel.</div>
+               <div class="col-3 "><span class="float-md-left"> x </span>
+                  <span class="float-md-right topicValue">No value</span>
+               </div>
+               <div class="col-3 "><span class="float-md-left"> y </span>
+                  <span class="float-md-right topicValue">No value</span>
+               </div>
+               <div class="col-3 "><span class="float-md-left"> z </span>
+                  <span class="float-md-right topicValue">No value</span>
+               </div>
+            </div>
+            <div class="row">
+               <div class="col-3 ">Gyro</div>
+               <div class="col-3 "><span class="float-md-left"> x </span>
+                  <span class="float-md-right topicValue">No value</span>
+               </div>
+               <div class="col-3 "><span class="float-md-left"> y </span>
+                  <span class="float-md-right topicValue">No value</span>
+               </div>
+               <div class="col-3 "><span class="float-md-left"> z </span>
+                  <span class="float-md-right topicValue">No value</span>
+               </div>
+            </div>
+         </div>
+         <div class="row" id="vectornav/ins3">
+            <div class="col-3 " id="vectornav/ins">GPS fixed</div>
+            <div class="col-3 Position">
+               <span class="float-md-left"> Latitude </span>
+               <span class="float-md-right topicValue">No value</span>
+            </div>
+            <div class="col-3 Position">
+               <span class="float-md-left"> Longitude </span>
+               <span class="float-md-right topicValue">No value</span>
+            </div>
+            <div class="col-3 Position">
+               <span class="float-md-left"> Altitude </span>
+               <span class="float-md-right topicValue">No value</span>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-4 " id="batteryPercentage">Bat %</div>
+            <div class="col-4 " id="batteryVoltage">Bat voltage</div>
+            <div class="col-4 " id="cpu">CPU</div>
+         </div>
+         <div class="row">
+            <div class="col-4 " id="diskSpaceAvailable">Disk space available</div>
+            <div class="col-4 " id="diskSpacePercentage">Disk space %</div>
+            <div class="col-4 Lidar" id="lidar/scan">
+               Lidar 
+               <span class="topicValue" id="lidar/scan0">No value</span>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-3">Messages</div>
+            <div class="col-9">This is where the messages will be displayed</div>
+         </div>
+         <div class="row">
+            <div class="col-12" id ="vrep/visionSensor/compressed"><img id = "vrep/visionSensor/compressed1" src="" alt=""></div>
+         </div>
+         <div class="row">
+            <div class="col-12">
+               <canvas id="lidarPolarCanvas" width="800" height="800"></canvas>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-12">
+               <canvas id="imageRateLineCanvas" width="600" height="400"></canvas>
+            </div>
+         </div>
+      </div>
+   </body>
 </html>
+
+
