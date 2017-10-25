@@ -1,4 +1,5 @@
 window.onload = function start() {
+	ipAddress ="192.93.8.105:8088";
 	askForTopics();
     setInterval(updatedEvent, 1000);
 
@@ -19,15 +20,19 @@ window.onload = function start() {
             longtouch = false;
             clearTimeout(timeout);
         });
-
     });
     lidarPolarCanvas = document.getElementById("lidarPolarCanvas");
     isLidarPolarChartSet = false;
 	imageRateLineCanvas = document.getElementById("imageRateLineCanvas");
     isImageRateChartSet = false;
 	updateLineChartRandomly();
+
+	$( "#postAMessage" ).click(function() {
+	  publishMessage(1);
+	});
 }
 var pressTimer;
+var ipAddress;
 
 var isLidarPolarChartSet;
 var lidarPolarAreaChart;
@@ -38,13 +43,15 @@ var imageRateLineChart;
 var imageRateLineCanvas;
 
 TypeOfData = {
-	RATE: 0,
- 	IMAGE: 1,
- 	LIDAR: 2,
- 	GPS: 3,
- 	IMU: 4,
- 	BATTERY: 5,
- 	DISK_SPACE: 6
+	RATE: {id: 0, typeName: "rate"},
+ 	IMAGE_L: {id: 1, typeName: "image_l"},
+	IMAGE_M: {id: 2, typeName: "image_m"},
+	IMAGE_R: {id: 3, typeName: "image_r"},
+ 	LIDAR: {id: 4, typeName: "lidar"},
+ 	GPS: {id: 5, typeName: "gps"},
+ 	IMU: {id: 6, typeName: "imu"},
+ 	BATTERY: {id: 7, typeName: "battery"},
+ 	DISK_SPACE: {id: 8, typeName: "disk_space"}
 };
 
 function updateChartRandomly() {
@@ -151,12 +158,8 @@ function addNewRateToChart(newRate){
 
 function changeActivity(element) {
 	if($(element).hasClass("inactive")){
-		console.log(element.id);
-		topics[element.id].subscribed = true;
 		subscribe(element.id);	
 	}else{
-		console.log(element.id);
-		topics[element.id].subscribed = false;
 		unsubscribe(element.id);
 	}
     $(element).toggleClass("inactive");
@@ -185,15 +188,27 @@ function redirectTo(element) {
     }
 }
 
-function askForData(topicName, typeOfData) {
-	//console.log(topicName, typeOfData);
+function updatedEvent() {
+	for (var topicName in topics) {
+		var typesOfData = topics[topicName].types;
+		if(topics[topicName].subscribed){
+			for(var typeOfData in typesOfData) {
+				askForData(topicName, topics[topicName].htmlTopicName, typesOfData[typeOfData]);
+			}
+		}
+	}
+}
+
+function askForData(topicName, htmlTopicName, typeOfData) {
     $.ajax({
-        url: "http://192.93.8.105:8088/" + "getData",
+        url: "http://" + ipAddress + "/" + "getData",
         type: "GET",
 		data: { topicName: topicName, typeOfData: typeOfData},
         success: function(data) {
             //console.log(data);
-			var element = document.getElementById(topicName+typeOfData);
+			// select the html element that matches the htmlTopicName and the type of data
+			var typeName = getTypeNameFromId(typeOfData);
+			var element = document.getElementById(htmlTopicName+'_'+typeName);
 			if(data.rate != undefined){
 				element.innerHTML = data.rate.toFixed(2) + " Hz";
 				if(topics[topicName].types.indexOf(TypeOfData.IMAGE) !== -1){
@@ -203,7 +218,7 @@ function askForData(topicName, typeOfData) {
 			if(data.lidarData != undefined){
 				drawLidarChart(data.lidarData);
 			}			
-			if(typeOfData == TypeOfData.IMAGE){
+			if(typeOfData == TypeOfData.IMAGE_L.id || typeOfData == TypeOfData.IMAGE_M.id || typeOfData == TypeOfData.IMAGE_R.id){
 				updateImage(data, element);
 			}
 			if(data.linear_acceleration_x != undefined){
@@ -236,13 +251,22 @@ var topics = null;
 
 function askForTopics() {
     $.ajax({
-        url: "http://192.93.8.105:8088/topics",
+        url: "http://" + ipAddress + "/topics",
         type: "GET",
         success: function(data) {
-            
-			topics = data;
+		topics = data;
 			for (var topicName in topics) {
 				topics[topicName] = {types: topics[topicName], subscribed: true};
+			}
+			// Put an html name that's different from the topic name in case this topic name changes.
+			// This html name will be related to the type of data.
+			for (var topicName in topics) {
+				var typesOfData = topics[topicName].types;
+				for(var typeOfData in typesOfData) {
+					if(typesOfData[typeOfData] != TypeOfData.RATE.id){
+						topics[topicName].htmlTopicName = getTypeNameFromId(typesOfData[typeOfData]);
+					}
+				}
 			}
 			console.log(topics);
         },
@@ -252,23 +276,9 @@ function askForTopics() {
     });
 }
 
-function updateImage(data, element){
-	// Looking for where is the array with data; +6 is to start the string at "[" and not at "data"
-    uintAsString = data.substring(data.indexOf("data: [") + 6);
-    if (uintAsString != undefined && uintAsString.length > 0) {
-        uintAsJson = JSON.parse(uintAsString);
-        var u8 = new Uint8Array(uintAsJson.length);
-        for (var i = 0; i < uintAsJson.length; i++) {
-            u8[i] = uintAsJson[i];
-        }
-        var b64encoded = btoa(Uint8ToString(u8));
-        element.src = "data:image/jpeg;base64, " + b64encoded;
-    }
-}
-
 function setSubscribtion(path, topicName) {
     $.ajax({
-        url: "http://192.93.8.105:8088/" + path,
+        url: "http://" + ipAddress + "/" + path,
         type: "POST",
         data: {
             key: topicName
@@ -287,6 +297,39 @@ function setSubscribtion(path, topicName) {
     });
 }
 
+function publishMessage(messageToPublish){
+	$.ajax({
+        url: "http://" + ipAddress + "/" + "publishToTopic",
+        type: "POST",
+        data: {
+			topicName : "topicFromWebApp",
+            message: messageToPublish
+        },
+        success: function(data) {
+			console.log('success');
+        },
+        error: function(xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+			console.log("error when publishing");
+        }
+    });
+}
+
+
+function updateImage(data, element){
+	// Looking for where is the array with data; +6 is to start the string at "[" and not at "data"
+    uintAsString = data.substring(data.indexOf("data: [") + 6);
+    if (uintAsString != undefined && uintAsString.length > 0) {
+        uintAsJson = JSON.parse(uintAsString);
+        var u8 = new Uint8Array(uintAsJson.length);
+        for (var i = 0; i < uintAsJson.length; i++) {
+            u8[i] = uintAsJson[i];
+        }
+        var b64encoded = btoa(Uint8ToString(u8));
+        element.src = "data:image/jpeg;base64, " + b64encoded;
+    }
+}
+
 function Uint8ToString(u8a) {
     var CHUNK_SZ = 0x8000;
     var c = [];
@@ -296,39 +339,32 @@ function Uint8ToString(u8a) {
     return c.join("");
 }
 
-function updatedEvent() {
-	for (var topicName in topics) {
-		var typesOfData = topics[topicName].types;
-		if(topics[topicName].subscribed){
-			if (typesOfData.indexOf(TypeOfData.RATE) !== -1) {
-				askForData(topicName,TypeOfData.RATE);
-			}
-			if (typesOfData.indexOf(TypeOfData.IMAGE) !== -1) {
-			  	askForData(topicName,TypeOfData.IMAGE);
-			}
-			if (typesOfData.indexOf(TypeOfData.LIDAR) !== -1) {
-			 	askForData(topicName,TypeOfData.LIDAR);
-			}
-			if (typesOfData.indexOf(TypeOfData.GPS) !== -1) {
-			 	askForData(topicName,TypeOfData.GPS);
-			}
-			if (typesOfData.indexOf(TypeOfData.IMU) !== -1) {
-			 	askForData(topicName,TypeOfData.IMU);
-			}
-			if (typesOfData.indexOf(TypeOfData.BATTERY) !== -1) {
-			 	askForData(topicName,TypeOfData.BATTERY);
-			}
-			if (typesOfData.indexOf(TypeOfData.DISK_SPACE) !== -1) {
-				askForData(topicName,TypeOfData.DISK_SPACE);
-			}
-		}
-	}
-}
-
-function unsubscribe(topicName) {
+function unsubscribe(htmlTopicName) {
+	var topicName = getTopicNameFromHtmlTopicName(htmlTopicName);
+	topics[topicName].subscribed = false;
     setSubscribtion("unsub", topicName);
 }
 
-function subscribe(topicName) {
+function subscribe(htmlTopicName) {
+	var topicName = getTopicNameFromHtmlTopicName(htmlTopicName);
+	topics[topicName].subscribed = true;
     setSubscribtion("sub", topicName);
+}
+
+function getTopicNameFromHtmlTopicName(htmlTopicName){
+	for (var topicName in topics) {
+		if(topics[topicName].htmlTopicName.indexOf(htmlTopicName) != -1){
+			return topicName;
+		}
+	}
+	return '';
+}
+
+function getTypeNameFromId(id){
+	for (var type in TypeOfData) {
+		if(TypeOfData[type].id == id){
+			return TypeOfData[type].typeName;
+		}
+	}
+	return '';
 }

@@ -24,22 +24,22 @@
             <div class="col-12">Initialized</div>
          </div>
          <div class="row">
-            <div class="col-4 Lcam" id="leftCameraRate">
+            <div class="col-4 Lcam" id="image_l">
                <span class="float-md-left" > Left cam </span>
-               <span class="float-md-right topicValue" id="leftCameraRateValue">No value</span>
+               <span class="float-md-right topicValue" id="image_l_rate">No value</span>
             </div>
-            <div class="col-4 Mcam" id="vrep/visionSensor/compressed">
+            <div class="col-4 Mcam" id="image_m">
                <span class="float-md-left" > Middle cam </span>
-               <span class="float-md-right topicValue" id="vrep/visionSensor/compressed0">No value</span>
+               <span class="float-md-right topicValue" id="image_m_rate">No value</span>
             </div>
-            <div class="col-4 Rcam" id="rightCameraRate">
+            <div class="col-4 Rcam" id="image_r">
                <span class="float-md-left" > Right cam </span>
-               <span class="float-md-right topicValue" id="rightCameraRateValue">No value</span>
+               <span class="float-md-right topicValue" id="image_r_rate">No value</span>
             </div>
          </div>
-         <div id="vectornav/imu4">
+         <div id="imu_imu">
             <div class="row">
-               <div class="col-3 " id="vectornav/imu">Accel.</div>
+               <div class="col-3 " id="imu">Accel.</div>
                <div class="col-3 "><span class="float-md-left"> x </span>
                   <span class="float-md-right topicValue">No value</span>
                </div>
@@ -63,8 +63,8 @@
                </div>
             </div>
          </div>
-         <div class="row" id="vectornav/ins3">
-            <div class="col-3 " id="vectornav/ins">GPS fixed</div>
+         <div class="row" id="gps_gps">
+            <div class="col-3 " id="gps">GPS fixed</div>
             <div class="col-3 Position">
                <span class="float-md-left"> Latitude </span>
                <span class="float-md-right topicValue">No value</span>
@@ -86,17 +86,20 @@
          <div class="row">
             <div class="col-4 " id="diskSpaceAvailable">Disk space available</div>
             <div class="col-4 " id="diskSpacePercentage">Disk space %</div>
-            <div class="col-4 Lidar" id="lidar/scan">
+            <div class="col-4 Lidar" id="lidar">
                Lidar 
-               <span class="topicValue" id="lidar/scan0">No value</span>
+               <span class="topicValue" id="lidar_rate">No value</span>
             </div>
          </div>
          <div class="row">
             <div class="col-3">Messages</div>
             <div class="col-9">This is where the messages will be displayed</div>
          </div>
+	 <div class="row">
+            <div class="col-12" id="postAMessage">Send a message</div>
+         </div>
          <div class="row">
-            <div class="col-12" id ="vrep/visionSensor/compressed"><img id = "vrep/visionSensor/compressed1" src="" alt=""></div>
+            <div class="col-12" id ="image_m"><img id = "image_m_image_m" src="" alt=""></div>
          </div>
          <div class="row">
             <div class="col-12">

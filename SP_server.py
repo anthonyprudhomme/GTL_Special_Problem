@@ -40,7 +40,7 @@ class SubscriberManager:
         self.lastData = lastData
 	
 class TypeOfData:
-    RATE, IMAGE, LIDAR, GPS, IMU, BATTERY, DISK_SPACE = range(7)
+    RATE, IMAGE_L, IMAGE_M, IMAGE_R, LIDAR, GPS, IMU, BATTERY, DISK_SPACE = range(9)
       
 class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def _set_headers(self):
@@ -68,7 +68,7 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	        self.wfile.write(json_data)
 	        return
 
-	    if TypeOfData.IMAGE == self.typeOfData:
+	    if TypeOfData.IMAGE_L == self.typeOfData or TypeOfData.IMAGE_M == self.typeOfData or TypeOfData.IMAGE_R == self.typeOfData:
 		self.send_header('Content-Type', 'image/jpeg')
                 self.end_headers()
                 if hasattr(subscribers[self.topicName], 'data') and subscribers[self.topicName].data is not None:
@@ -144,6 +144,15 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	    customSub = subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber
 	    subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber = CustomSubscriber(customSub.topicName,customSub.topicType, customSub.typesOfData, customSub.callback)
 
+	if self.path == '/publishToTopic':
+	    print "should publish"
+	    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
+	    topicName = parse_qs(self.data_string)['topicName'][0]
+	    messageToPublish = parse_qs(self.data_string)['message'][0]
+	    global publisher
+	    publisher.publish(messageToPublish)
+	    
+
 #-------------Callback----------------
 
 def callback(data, args):
@@ -151,7 +160,7 @@ def callback(data, args):
 	setTimeIfNecessary(args[0])
 	#rospy.loginfo(rospy.get_caller_id() + 'I received rate data')
 
-    if TypeOfData.IMAGE in args[1]:
+    if TypeOfData.IMAGE_L in args[1] or TypeOfData.IMAGE_M in args[1] or TypeOfData.IMAGE_R in args[1]:
 	subscribers[args[0]].data = data
 	#rospy.loginfo(rospy.get_caller_id() + 'I received image data')
 
@@ -178,7 +187,7 @@ def callback(data, args):
 def subscribeToTopics():
     rospy.init_node('listener', anonymous=True)
     
-    subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE], callback))
+    subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback))
     subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback))
     subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback))
     subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
@@ -201,8 +210,12 @@ def computeAverage(key):
         subscribers[key].numberOfMessagesBetweenRequests = 0
     return averageRate
 
+publisher = None
+
 def run(server_class=HTTPServer, handler_class=SPRequestHandler, port=8088, server_ip='192.93.8.105'):
     subscribeToTopics()
+    global publisher
+    publisher = rospy.Publisher('topicFromWebApp', String, queue_size=10)
     web_dir = os.path.join(os.path.dirname(__file__), 'web')
     os.chdir(web_dir)
     server_address = (server_ip, port)
