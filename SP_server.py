@@ -22,6 +22,8 @@ from sensor_msgs.msg import TimeReference
 from vectornav.msg import ins
 from vectornav.msg import sensors
 
+from disk_monitor.msg import DiskStatus
+
 subscribers = {}
 
 class CustomSubscriber:
@@ -114,7 +116,13 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		print 'not implemented yet'
 
 	    if TypeOfData.DISK_SPACE == self.typeOfData:
-		print 'not implemented yet'
+		self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+		data['size_mb'] = subscribers[self.topicName].lastData.size_mb
+	        data['used_mb'] = subscribers[self.topicName].lastData.used_mb
+	        data['available_mb'] = subscribers[self.topicName].lastData.available_mb
+	        json_data = json.dumps(data)
+	        self.wfile.write(json_data)
 
 	if self.path == '/topics':
             self.send_response(200)
@@ -177,6 +185,7 @@ def callback(data, args):
 	#rospy.loginfo(rospy.get_caller_id() + 'I received imu data')
 
     if TypeOfData.BATTERY in args[1]:
+	subscribers[args[0]].lastData = data
 	rospy.loginfo(rospy.get_caller_id() + 'I received battery data')
 
     if TypeOfData.DISK_SPACE in args[1]:
@@ -191,6 +200,7 @@ def subscribeToTopics():
     subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback))
     subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback))
     subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
+    subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback))
 
 # Methods to get the rate at which a topic is pusblishing
 # The parameter "key" is a string that contains the name of the topic (see previousTimes variable to get the key)

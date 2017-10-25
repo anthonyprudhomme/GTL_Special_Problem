@@ -236,6 +236,12 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 				elements[1].innerHTML = data.longitude.toFixed(7);
 				elements[2].innerHTML = data.altitude.toFixed(2);
 			}
+			if(data.size_mb != undefined){
+				var elements = element.getElementsByClassName("topicValue");
+				var percentage = data.available_mb/data.size_mb
+				elements[0].innerHTML = data.available_mb.toFixed(2);
+				elements[1].innerHTML = percentage.toFixed(2)+"%";
+			}
         },
         error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");
