@@ -13,6 +13,7 @@ import rospy
 from std_msgs.msg import String
 
 from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import NavSatFix
@@ -22,17 +23,18 @@ from sensor_msgs.msg import TimeReference
 from vectornav.msg import ins
 from vectornav.msg import sensors
 
-from disk_monitor.msg import DiskStatus
+#from disk_monitor.msg import DiskStatus
 
 subscribers = {}
 
 class CustomSubscriber:
-    def __init__(self, topicName, topicType, typesOfData, callback, subscriber = None):
+    def __init__(self, topicName, topicType, typesOfData, callback, htmlTopicName, subscriber = None):
         self.topicName = topicName
      	self.topicType = topicType
 	self.callback = callback
 	self.typesOfData = typesOfData
-        self.subscriber = rospy.Subscriber(topicName, topicType, callback, (topicName,typesOfData))
+	self.htmlTopicName = htmlTopicName
+        self.subscriber = rospy.Subscriber(topicName, topicType, callback, (topicName, typesOfData))
 
 class SubscriberManager:
     def __init__(self, customSubscriber, startTime = None, numberOfMessagesBetweenRequests = 0, lastData = None):
@@ -130,7 +132,7 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.end_headers()
             data = {}
 	    for key in subscribers:
-		data[key] = subscribers[key].customSubscriber.typesOfData
+		data[key] = {'types': subscribers[key].customSubscriber.typesOfData, 'htmlTopicName': subscribers[key].customSubscriber.htmlTopicName}
 	    json_data = json.dumps(data)
 	    self.wfile.write(json_data)
 	    return
@@ -150,7 +152,7 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	if self.path == '/sub':
 	    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
 	    customSub = subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber
-	    subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber = CustomSubscriber(customSub.topicName,customSub.topicType, customSub.typesOfData, customSub.callback)
+	    subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber = CustomSubscriber(customSub.topicName,customSub.topicType, customSub.typesOfData, customSub.htmlTopicName, customSub.callback)
 
 	if self.path == '/publishToTopic':
 	    print "should publish"
@@ -196,11 +198,17 @@ def callback(data, args):
 def subscribeToTopics():
     rospy.init_node('listener', anonymous=True)
     
-    subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback))
-    subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback))
-    subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback))
-    subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
-    subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback))
+    #subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback))
+    #subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback))
+    #subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback))
+    #subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
+    subscribers['/camera1/image_raw'] = SubscriberManager(CustomSubscriber('/camera1/image_raw', Image, [TypeOfData.RATE], callback, "image_l"))
+    subscribers['/camera1/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera1/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_L], callback, "image_l"))
+    #subscribers['/camera3/image_raw'] = SubscriberManager(CustomSubscriber('/camera3/image_raw', Image, [TypeOfData.RATE,TypeOfData.IMAGE_R], callback))
+    subscribers['/scan'] = SubscriberManager(CustomSubscriber('/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback,"lidar"))
+    subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
+    #subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
+    #subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback))
 
 # Methods to get the rate at which a topic is pusblishing
 # The parameter "key" is a string that contains the name of the topic (see previousTimes variable to get the key)
@@ -222,7 +230,7 @@ def computeAverage(key):
 
 publisher = None
 
-def run(server_class=HTTPServer, handler_class=SPRequestHandler, port=8088, server_ip='192.93.8.105'):
+def run(server_class=HTTPServer, handler_class=SPRequestHandler, port=8000, server_ip='192.93.8.137'):
     subscribeToTopics()
     global publisher
     publisher = rospy.Publisher('topicFromWebApp', String, queue_size=10)

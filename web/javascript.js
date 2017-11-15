@@ -1,5 +1,5 @@
 window.onload = function start() {
-	ipAddress ="192.93.8.105:8088";
+	ipAddress ="192.93.8.137:8000";
 	askForTopics();
     setInterval(updatedEvent, 1000);
 
@@ -190,10 +190,10 @@ function redirectTo(element) {
 
 function updatedEvent() {
 	for (var topicName in topics) {
-		var typesOfData = topics[topicName].types;
+		var typesOfData = topics[topicName].topic.types;
 		if(topics[topicName].subscribed){
 			for(var typeOfData in typesOfData) {
-				askForData(topicName, topics[topicName].htmlTopicName, typesOfData[typeOfData]);
+				askForData(topicName, topics[topicName].topic.htmlTopicName, typesOfData[typeOfData]);
 			}
 		}
 	}
@@ -211,7 +211,7 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 			var element = document.getElementById(htmlTopicName+'_'+typeName);
 			if(data.rate != undefined){
 				element.innerHTML = data.rate.toFixed(2) + " Hz";
-				if(topics[topicName].types.indexOf(TypeOfData.IMAGE) !== -1){
+				if(topics[topicName].topic.types.indexOf(TypeOfData.IMAGE_M.id) !== -1){
 					addNewRateToChart(data.rate.toFixed(2));		
 				}
 			}
@@ -260,21 +260,11 @@ function askForTopics() {
         url: "http://" + ipAddress + "/topics",
         type: "GET",
         success: function(data) {
-		topics = data;
-			for (var topicName in topics) {
-				topics[topicName] = {types: topics[topicName], subscribed: true};
-			}
-			// Put an html name that's different from the topic name in case this topic name changes.
-			// This html name will be related to the type of data.
-			for (var topicName in topics) {
-				var typesOfData = topics[topicName].types;
-				for(var typeOfData in typesOfData) {
-					if(typesOfData[typeOfData] != TypeOfData.RATE.id){
-						topics[topicName].htmlTopicName = getTypeNameFromId(typesOfData[typeOfData]);
-					}
-				}
-			}
+			topics = data;
 			console.log(topics);
+			for (var topicName in topics) {
+				topics[topicName] = {topic: topics[topicName], subscribed: true};
+			}	
         },
         error: function(xhr, status, error) {
             
@@ -332,7 +322,8 @@ function updateImage(data, element){
             u8[i] = uintAsJson[i];
         }
         var b64encoded = btoa(Uint8ToString(u8));
-        element.src = "data:image/jpeg;base64, " + b64encoded;
+        element.src = "data:image;base64, " + b64encoded;
+		//document.getElementById("test").innerHTML = b64encoded;
     }
 }
 
