@@ -14,15 +14,23 @@
   		<script src="jquery.js"></script>
    		<script src="javascript.js"></script>
       	<script src="bootstrap/dist/js/bootstrap.min.js"></script>
-
-  		<h1>Special problem</h1>
+		<div id="page_id" value="image"><div>
 		<div class="container">
+			<div class="row">
+				<div class="col-12" id="image_rate">
+	                <span class="float-md-left" style="padding-left: 10px;"> Rate of the camera:</span>
+	                <span class="float-md-right topicValue" id="image_rate_value">No value</span>
+	            </div>
+			</div>
 		    <div class="row">
-		      <div class="col-12 active"><img id = "image" src="" alt=""></div>
+		      <div class="col-12 active" id="image_div"><img id="image_img" src="" alt=""></div>
+		    </div>
+
+			<div class="row">
+		        <div class="col-12">
+		            <canvas id="imageRateLineCanvas" width="600" height="400"></canvas>
+		        </div>
 		    </div>
 		</div>
-		<div id = "sub">Subscribe</div>
-		<div id = "unsub">Unsubscribe</div>
-		
     </body>
 </html>

@@ -152,7 +152,7 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	if self.path == '/sub':
 	    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
 	    customSub = subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber
-	    subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber = CustomSubscriber(customSub.topicName,customSub.topicType, customSub.typesOfData, customSub.htmlTopicName, customSub.callback)
+	    subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber = CustomSubscriber(customSub.topicName,customSub.topicType, customSub.typesOfData,  customSub.callback, customSub.htmlTopicName)
 
 	if self.path == '/publishToTopic':
 	    print "should publish"
@@ -198,15 +198,15 @@ def callback(data, args):
 def subscribeToTopics():
     rospy.init_node('listener', anonymous=True)
     
-    #subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback))
-    #subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback))
-    #subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback))
-    #subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
-    subscribers['/camera1/image_raw'] = SubscriberManager(CustomSubscriber('/camera1/image_raw', Image, [TypeOfData.RATE], callback, "image_l"))
-    subscribers['/camera1/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera1/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_L], callback, "image_l"))
-    #subscribers['/camera3/image_raw'] = SubscriberManager(CustomSubscriber('/camera3/image_raw', Image, [TypeOfData.RATE,TypeOfData.IMAGE_R], callback))
-    subscribers['/scan'] = SubscriberManager(CustomSubscriber('/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback,"lidar"))
+    subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback, "image_m"))
+    subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback, "lidar"))
     subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
+    subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback, "gps"))
+    #subscribers['/camera1/image_raw'] = SubscriberManager(CustomSubscriber('/camera1/image_raw', Image, [TypeOfData.RATE], callback, "image_l"))
+    #subscribers['/camera1/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera1/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_L], callback, "image_l"))
+    #subscribers['/camera3/image_raw'] = SubscriberManager(CustomSubscriber('/camera3/image_raw', Image, [TypeOfData.RATE,TypeOfData.IMAGE_R], callback))
+    #subscribers['/scan'] = SubscriberManager(CustomSubscriber('/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback,"lidar"))
+    #subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
     #subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
     #subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback))
 

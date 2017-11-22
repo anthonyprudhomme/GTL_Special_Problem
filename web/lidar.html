@@ -7,7 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 		<script src="Chart.bundle.js"></script>
 
-        <title>Image</title>
+        <title>Lidar</title>
     </head>
 
     <body>
@@ -15,12 +15,19 @@
    		<script src="javascript.js"></script>
       	<script src="bootstrap/dist/js/bootstrap.min.js"></script>
 
-  		<h1>Special problem</h1>
 		<div class="container">
-		    <div class="row">
-		      <div class="col-12 active"><canvas id="polarCanvas" width="600" height="400"></canvas></div>
-		    </div>
+			<div id="page_id" value="lidar"><div>
+			<div class="row">
+				<div class="col-12 Lidar"id="lidar"> 
+					<span class="float-md-left" style="padding-left: 10px;"> Rate of the Lidar:</span>
+		            <span class="float-md-right topicValue" id="lidar_rate">No value</span>
+		        </div>
+			</div>
+			<div class="row">
+                <div class="col-12" id= "lidar_lidar">
+                    <canvas id="lidarPolarCanvas" width="800" height="800"></canvas>
+                </div>
+            </div>
 		</div>
 		
     </body>
-</html>

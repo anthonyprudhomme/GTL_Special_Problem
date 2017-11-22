@@ -28,13 +28,24 @@ body {
 }
 
 .topicValue{
-  font-size: 140%;
+  font-size: 100%;
   text-align: right;
+}
+
+.longValue{
+  font-size: 100%;
+  text-align: center;
 }
 
 .label{
   font-size: 120%;
   text-align: left;
+}
+
+.leftAlignedCheckbox{
+  position: absolute;
+  top: 10px;
+  left: 5px;
 }
 
 

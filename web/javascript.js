@@ -1,37 +1,3 @@
-window.onload = function start() {
-	ipAddress ="192.93.8.137:8000";
-	askForTopics();
-    setInterval(updatedEvent, 1000);
-
-    $('*[class^="col-"]').each(function() {
-
-        var timeout, longtouch;
-
-        $(this).mousedown(function() {
-            var element = this;
-            timeout = setTimeout(function() {
-                longtouch = true;
-                changeActivity(element);
-            }, 300);
-        }).mouseup(function() {
-            if (!longtouch) {
-                redirectTo(this);
-            }
-            longtouch = false;
-            clearTimeout(timeout);
-        });
-    });
-    lidarPolarCanvas = document.getElementById("lidarPolarCanvas");
-    isLidarPolarChartSet = false;
-	imageRateLineCanvas = document.getElementById("imageRateLineCanvas");
-    isImageRateChartSet = false;
-	updateLineChartRandomly();
-
-	$( "#postAMessage" ).click(function() {
-	  publishMessage(1);
-	});
-}
-var pressTimer;
 var ipAddress;
 
 var isLidarPolarChartSet;
@@ -41,6 +7,9 @@ var lidarPolarCanvas;
 var isImageRateChartSet;
 var imageRateLineChart;
 var imageRateLineCanvas;
+
+var currentPage;
+var currentCamera;
 
 TypeOfData = {
 	RATE: {id: 0, typeName: "rate"},
@@ -54,22 +23,64 @@ TypeOfData = {
  	DISK_SPACE: {id: 8, typeName: "disk_space"}
 };
 
-function updateChartRandomly() {
-    var angleValues = new Array();
-    var i;
-    for (i = 0; i < 360; i++) {
-        angleValues.push(Math.floor((Math.random() * 50) + 1));
-    }
-    drawLidarChart(angleValues);
+// This function is triggered at the loading of any of the page of the web app
+window.onload = function start() {
+	ipAddress ="192.93.8.105:8000";
+	currentPage = document.getElementById("page_id").getAttribute("value");
+	console.log(currentPage);
+	askForTopics();
+    setInterval(updateTopicValues, 1000);
+	
+	// Depending on the page you are on, do different things
+	if(currentPage.indexOf("index")!= -1){
+		$('input[type=checkbox]').change(function(){
+			changeActivity(this.parentNode);
+		});
+
+		$('input[type=checkbox]').prop('checked', true);
+
+		$( "#postAMessage" ).click(function() {
+		  publishMessage(1);
+		});
+
+		$(".link_new_page").click(function() {
+			if(this.parentNode.parentNode.getAttribute("id").indexOf('image') != -1){
+				currentCamera = this.parentNode.parentNode.getAttribute("id");
+				document.cookie = "current_camera="+currentCamera;
+			}
+		});
+	}
+
+	if(currentPage.indexOf("image")!= -1){
+		currentCamera = getCookie('current_camera');
+		var imageImg = document.getElementById('image_img');
+		imageImg.setAttribute("id", currentCamera+"_"+currentCamera);
+		var imageRate = document.getElementById('image_rate');
+		imageRate.setAttribute("id", currentCamera);
+		var imageRateValue = document.getElementById('image_rate_value');
+		imageRateValue.setAttribute("id", currentCamera+"_rate");
+
+		imageRateLineCanvas = document.getElementById("imageRateLineCanvas");
+		isImageRateChartSet = false;
+		initLineChart();
+	}
+
+	if(currentPage.indexOf("lidar")!= -1){
+		lidarPolarCanvas = document.getElementById("lidarPolarCanvas");
+		isLidarPolarChartSet = false;
+	}
+
+	$(window).bind('beforeunload', function(){
+  		unsubscribeFromCurrentTopics();
+	});
 }
 
-function updateLineChartRandomly() {
+function initLineChart() {
 	if(!isImageRateChartSet){
 		var rateValues = new Array();
 		rateValues.push(0);
 		drawImageRateLineChart(rateValues);
 	}
-	//addNewRateToChart(Math.floor((Math.random() * 50) + 1));
 }
 
 function drawLidarChart(angleValues) {
@@ -104,7 +115,6 @@ function drawLidarChart(angleValues) {
         } else {
             lidarPolarAreaChart.data.datasets[0].data = angleValues;
             lidarPolarAreaChart.update();
-	    	//console.log(lidarPolarAreaChart);
         }
     }
 }
@@ -145,6 +155,7 @@ function drawImageRateLineChart(rateValues) {
 }
 
 function addNewRateToChart(newRate){
+	console.log("called");
 	var values = imageRateLineChart.data.datasets[0].data;
 	if(values.length <100){
 		values.push(newRate);
@@ -165,30 +176,7 @@ function changeActivity(element) {
     $(element).toggleClass("inactive");
 }
 
-function redirectTo(element) {
-    var className = $(element).attr('class');
-    if (className.indexOf("Lcam") != -1) {
-        window.location.href = "image.html";
-		subscribe(element.id);
-    }
-    if (className.indexOf("Mcam") != -1) {
-        window.location.href = "image.html";
-		subscribe(element.id);
-    }
-    if (className.indexOf("Rcam") != -1) {
-        window.location.href = "image.html";
-		subscribe(element.id);
-    }
-    if (className.indexOf("Lidar") != -1) {
-        window.location.href = "lidar.html";
-		subscribe(element.id);
-    }
-    if (className.indexOf("Position") != -1) {
-        window.location.href = "position.html";
-    }
-}
-
-function updatedEvent() {
+function updateTopicValues() {
 	for (var topicName in topics) {
 		var typesOfData = topics[topicName].topic.types;
 		if(topics[topicName].subscribed){
@@ -209,39 +197,48 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 			// select the html element that matches the htmlTopicName and the type of data
 			var typeName = getTypeNameFromId(typeOfData);
 			var element = document.getElementById(htmlTopicName+'_'+typeName);
-			if(data.rate != undefined){
-				element.innerHTML = data.rate.toFixed(2) + " Hz";
-				if(topics[topicName].topic.types.indexOf(TypeOfData.IMAGE_M.id) !== -1){
-					addNewRateToChart(data.rate.toFixed(2));		
+			if(element != undefined){
+				if(data.rate != undefined){
+					element.innerHTML = data.rate.toFixed(2) + " Hz";
+					if(topics[topicName].topic.types.indexOf(TypeOfData.IMAGE_M.id) !== -1){
+						if(currentPage.indexOf("image")!= -1){
+							addNewRateToChart(data.rate.toFixed(2));
+						}		
+					}
 				}
-			}
-			if(data.lidarData != undefined){
-				drawLidarChart(data.lidarData);
-			}			
-			if(typeOfData == TypeOfData.IMAGE_L.id || typeOfData == TypeOfData.IMAGE_M.id || typeOfData == TypeOfData.IMAGE_R.id){
-				updateImage(data, element);
-			}
-			if(data.linear_acceleration_x != undefined){
-				var elements = element.getElementsByClassName("topicValue");
-				elements[0].innerHTML = data.linear_acceleration_x.toFixed(2);
-				elements[1].innerHTML = data.linear_acceleration_y.toFixed(2);
-				elements[2].innerHTML = data.linear_acceleration_z.toFixed(2);
-				elements[3].innerHTML = data.angular_velocity_x.toFixed(2);
-				elements[4].innerHTML = data.angular_velocity_y.toFixed(2);
-				elements[5].innerHTML = data.angular_velocity_z.toFixed(2);
-			}
-			if(data.latitude != undefined){
-				var elements = element.getElementsByClassName("topicValue");
-				elements[0].innerHTML = data.latitude.toFixed(7);
-				elements[1].innerHTML = data.longitude.toFixed(7);
-				elements[2].innerHTML = data.altitude.toFixed(2);
-			}
-			if(data.size_mb != undefined){
-				var elements = element.getElementsByClassName("topicValue");
-				var percentage = data.available_mb/data.size_mb
-				elements[0].innerHTML = data.available_mb.toFixed(2);
-				elements[1].innerHTML = percentage.toFixed(2)+"%";
-			}
+				if(data.lidarData != undefined){
+					if(currentPage.indexOf("lidar")!= -1){
+						console.log("drawing");
+						drawLidarChart(data.lidarData);
+					}
+				}			
+				if(typeOfData == TypeOfData.IMAGE_L.id || typeOfData == TypeOfData.IMAGE_M.id || typeOfData == TypeOfData.IMAGE_R.id){
+					if(currentPage.indexOf("image")!= -1){
+						updateImage(data, element);
+					}
+				}
+				if(data.linear_acceleration_x != undefined){
+					var elements = element.getElementsByClassName("topicValue");
+					elements[0].innerHTML = data.linear_acceleration_x.toFixed(2);
+					elements[1].innerHTML = data.linear_acceleration_y.toFixed(2);
+					elements[2].innerHTML = data.linear_acceleration_z.toFixed(2);
+					elements[3].innerHTML = data.angular_velocity_x.toFixed(2);
+					elements[4].innerHTML = data.angular_velocity_y.toFixed(2);
+					elements[5].innerHTML = data.angular_velocity_z.toFixed(2);
+				}
+				if(data.latitude != undefined){
+					var elements = element.getElementsByClassName("topicValue");
+					elements[0].innerHTML = data.latitude.toFixed(7);
+					elements[1].innerHTML = data.longitude.toFixed(7);
+					elements[2].innerHTML = data.altitude.toFixed(2);
+				}
+				if(data.size_mb != undefined){
+					var elements = element.getElementsByClassName("topicValue");
+					var percentage = data.available_mb/data.size_mb
+					elements[0].innerHTML = data.available_mb.toFixed(2);
+					elements[1].innerHTML = percentage.toFixed(2)+"%";
+				}
+			}	
         },
         error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");
@@ -261,10 +258,10 @@ function askForTopics() {
         type: "GET",
         success: function(data) {
 			topics = data;
-			console.log(topics);
 			for (var topicName in topics) {
 				topics[topicName] = {topic: topics[topicName], subscribed: true};
-			}	
+			}
+			console.log(topics);	
         },
         error: function(xhr, status, error) {
             
@@ -323,7 +320,6 @@ function updateImage(data, element){
         }
         var b64encoded = btoa(Uint8ToString(u8));
         element.src = "data:image;base64, " + b64encoded;
-		//document.getElementById("test").innerHTML = b64encoded;
     }
 }
 
@@ -337,7 +333,9 @@ function Uint8ToString(u8a) {
 }
 
 function unsubscribe(htmlTopicName) {
+	console.log(htmlTopicName);
 	var topicName = getTopicNameFromHtmlTopicName(htmlTopicName);
+	console.log("2- " + topicName);
 	topics[topicName].subscribed = false;
     setSubscribtion("unsub", topicName);
 }
@@ -348,9 +346,13 @@ function subscribe(htmlTopicName) {
     setSubscribtion("sub", topicName);
 }
 
+function unsubscribeFromCurrentTopics(){
+
+}
+
 function getTopicNameFromHtmlTopicName(htmlTopicName){
 	for (var topicName in topics) {
-		if(topics[topicName].htmlTopicName.indexOf(htmlTopicName) != -1){
+		if(topics[topicName].topic.htmlTopicName.indexOf(htmlTopicName) != -1){
 			return topicName;
 		}
 	}
@@ -365,3 +367,19 @@ function getTypeNameFromId(id){
 	}
 	return '';
 }
+
+function getCookie(cookieName) {
+    var name = cookieName + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
