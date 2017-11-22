@@ -188,7 +188,7 @@ def callback(data, args):
 
     if TypeOfData.BATTERY in args[1]:
 	subscribers[args[0]].lastData = data
-	rospy.loginfo(rospy.get_caller_id() + 'I received battery data')
+	#rospy.loginfo(rospy.get_caller_id() + 'I received battery data')
 
     if TypeOfData.DISK_SPACE in args[1]:
 	rospy.loginfo(rospy.get_caller_id() + 'I received disk space data')
@@ -202,13 +202,14 @@ def subscribeToTopics():
     subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback, "lidar"))
     subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
     subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback, "gps"))
+    subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback, "disk_space"))
     #subscribers['/camera1/image_raw'] = SubscriberManager(CustomSubscriber('/camera1/image_raw', Image, [TypeOfData.RATE], callback, "image_l"))
     #subscribers['/camera1/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera1/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_L], callback, "image_l"))
     #subscribers['/camera3/image_raw'] = SubscriberManager(CustomSubscriber('/camera3/image_raw', Image, [TypeOfData.RATE,TypeOfData.IMAGE_R], callback))
     #subscribers['/scan'] = SubscriberManager(CustomSubscriber('/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback,"lidar"))
     #subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
     #subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
-    #subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback))
+    
 
 # Methods to get the rate at which a topic is pusblishing
 # The parameter "key" is a string that contains the name of the topic (see previousTimes variable to get the key)

@@ -11,6 +11,7 @@ var imageRateLineCanvas;
 var currentPage;
 var currentCamera;
 
+//This object is an enum that's linked to the server file "SP_server.py": typeName has to be the same as in this file
 TypeOfData = {
 	RATE: {id: 0, typeName: "rate"},
  	IMAGE_L: {id: 1, typeName: "image_l"},
