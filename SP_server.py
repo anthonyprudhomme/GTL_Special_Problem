@@ -6,9 +6,13 @@ import os
 import json
 import simplejson
 
+import subprocess
+import re
+
 
 # import of Ros components to be able to subscribe to topics
 import rospy
+import roslib; roslib.load_manifest('wpa_cli')
 
 from std_msgs.msg import String
 
@@ -119,9 +123,10 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		print 'not implemented yet'
 
 	    if TypeOfData.DISK_SPACE == self.typeOfData:
-		self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-		data['size_mb'] = subscribers[self.topicName].lastData.size_mb
+	        self.send_header('Content-Type', 'application/json')
+	        self.end_headers()
+	        subscribers[self.topicName].lastData = getDiskSpace()
+	        data['size_mb'] = subscribers[self.topicName].lastData.size_mb
 	        data['used_mb'] = subscribers[self.topicName].lastData.used_mb
 	        data['available_mb'] = subscribers[self.topicName].lastData.available_mb
 	        json_data = json.dumps(data)
@@ -129,15 +134,15 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		return
 
 	if self.path == '/topics':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            data = {}
-	    for key in subscribers:
-		data[key] = {'types': subscribers[key].customSubscriber.typesOfData, 'htmlTopicName': subscribers[key].customSubscriber.htmlTopicName}
-	    json_data = json.dumps(data)
-	    self.wfile.write(json_data)
-	    return
+		self.send_response(200)
+		self.send_header('Content-Type', 'application/json')
+		self.end_headers()
+		data = {}
+		for key in subscribers:
+			data[key] = {'types': subscribers[key].customSubscriber.typesOfData, 'htmlTopicName': subscribers[key].customSubscriber.htmlTopicName}
+			json_data = json.dumps(data)
+		self.wfile.write(json_data)
+		return
 
 	else:
 	    if self.path == '/':
@@ -193,27 +198,33 @@ def callback(data, args):
 	#rospy.loginfo(rospy.get_caller_id() + 'I received battery data')
 
     if TypeOfData.DISK_SPACE in args[1]:
-	subscribers[args[0]].lastData = data
-	#rospy.loginfo(rospy.get_caller_id() + 'I received disk space data')
+	#subscribers[args[0]].lastData = data
+	rospy.loginfo(rospy.get_caller_id() + 'I received disk space data')
     
 #---------------------------------------
 
 def subscribeToTopics():
     rospy.init_node('listener', anonymous=True)
     
+	#Test topics
     subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.IMAGE_M], callback, "image_m"))
     subscribers['vrep/visionSensorInfo'] = SubscriberManager(CustomSubscriber('vrep/visionSensorInfo', CameraInfo, [TypeOfData.RATE], callback, "image_m_rate"))
     subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback, "lidar"))
     subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
     subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback, "gps"))
-    subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback, "disk_space"))
-	#subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback, "image_m"))
-    #subscribers['/camera1/image_raw'] = SubscriberManager(CustomSubscriber('/camera1/image_raw', Image, [TypeOfData.RATE], callback, "image_l"))
-    #subscribers['/camera1/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera1/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_L], callback, "image_l"))
-    #subscribers['/camera3/image_raw'] = SubscriberManager(CustomSubscriber('/camera3/image_raw', Image, [TypeOfData.RATE,TypeOfData.IMAGE_R], callback))
+    subscribers['disk_space'] = SubscriberManager(CustomSubscriber('disk_space', DiskStatus, [TypeOfData.DISK_SPACE], callback, "disk_space"))
+
+	#Real topics
+	#subscribers['/camera1/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera1/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_L], callback, "image_l"))
+	#subscribers['/camera1/cameraInfo'] = SubscriberManager(CustomSubscriber('/camera1/cameraInfo', CameraInfo, [TypeOfData.RATE], callback, "image_l_rate"))
+	#subscribers['/camera2/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera2/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_M], callback, "image_m"))
+	#subscribers['/camera2/cameraInfo'] = SubscriberManager(CustomSubscriber('/camera2/cameraInfo', CameraInfo, [TypeOfData.RATE], callback, "image_m_rate"))
+    #subscribers['/camera3/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera3/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_R], callback, "image_r"))
+    #subscribers['/camera3/cameraInfo'] = SubscriberManager(CustomSubscriber('/camera3/cameraInfo', CameraInfo, [TypeOfData.RATE], callback, "image_r_rate"))
     #subscribers['/scan'] = SubscriberManager(CustomSubscriber('/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback,"lidar"))
     #subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
     #subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback))
+	#subscribers['disk_space'] = SubscriberManager(CustomSubscriber('disk_space', DiskStatus, [TypeOfData.DISK_SPACE], callback, "disk_space"))
     
 
 # Methods to get the rate at which a topic is pusblishing
@@ -233,6 +244,26 @@ def computeAverage(key):
         subscribers[key].startTime = None
         subscribers[key].numberOfMessagesBetweenRequests = 0
     return averageRate
+
+dev = rospy.get_param("~device","/dev/sda5")
+
+def getDiskSpace():
+    scan_results = subprocess.check_output(["df", "-m"]).split("\n")
+    for line in scan_results:
+        l = []
+        line = line.strip()
+        while len(line)>0:
+            l.append(line.split(" ")[0])
+            line = (" ".join(line.split(" ")[1:])).strip()
+        if len(l)==0 or (l[0] != dev):
+            continue
+        state = DiskStatus()
+        state.device = l[0]
+        state.mounted = l[5]
+        state.size_mb = int(l[1])
+        state.used_mb = int(l[2])
+        state.available_mb = int(l[3])
+    return state
 
 publisher = None
 

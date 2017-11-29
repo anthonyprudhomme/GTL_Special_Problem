@@ -1,14 +1,17 @@
 var ipAddress;
 var refreshTime;
 
+// Chart for lidar data visualization
 var isLidarPolarChartSet;
 var lidarPolarAreaChart;
 var lidarPolarCanvas;
 
+// Chart showing rate of camera over time
 var isImageRateChartSet;
 var imageRateLineChart;
 var imageRateLineCanvas;
 
+// Variables containing the current page shown and the current camera selected
 var currentPage;
 var currentCamera;
 
@@ -167,6 +170,7 @@ function addNewRateToChart(newRate){
     imageRateLineChart.update();
 }
 
+// This function is triggered when you clickon a check box, it subscribes or unsubscribe to the topic linked to the checkbox 
 function changeActivity(element) {
 	if($(element).hasClass("inactive")){
 		subscribe(element.id);	
@@ -176,21 +180,23 @@ function changeActivity(element) {
     $(element).toggleClass("inactive");
 }
 
+// This function is called every "refreshTime' it asks for each topic you're subscribed to the new data 
 function updateTopicValues() {
 	for (var topicName in topics) {
 		var typesOfData = topics[topicName].topic.types;
 		if(topics[topicName].subscribed){
 			for(var typeOfData in typesOfData) {
-				//console.log(topics[topicName].topic.htmlTopicName);
-				//if(topics[topicName].topic.htmlTopicName.indexOf("image") != -1 || topics[topicName].topic.htmlTopicName.indexOf("lidar") != -1){
-					//if(typesOfData[typeOfData]!=0){
-						//if(currentPage.indexOf("index")!= -1){
 				askForData(topicName, topics[topicName].topic.htmlTopicName, typesOfData[typeOfData]);
 			}
 		}
 	}
 }
 
+// This function is called by the function above
+// It queries the new datas of the topic from the server (SP_server.py)
+// topicName is a string that corresponds to the actual topic name you wanna get data from (i.e. /vrep/...)
+// htmlTopicName is a string the name given to that type of data in the html file
+// typeOfData is an integer that corresponds to the typeOfData in the enumeration at the beginning of this file
 function askForData(topicName, htmlTopicName, typeOfData) {
     $.ajax({
         url: "http://" + ipAddress + "/" + "getData",
@@ -200,11 +206,13 @@ function askForData(topicName, htmlTopicName, typeOfData) {
             //console.log(data);
 			// select the html element that matches the htmlTopicName and the type of data
 			var typeName = getTypeNameFromId(typeOfData);
+			// element is the html element that will be updated with the new data, its id is built from the base html topic name we defined and the type name (rate, lidar etc...)
 			var element = document.getElementById(htmlTopicName+'_'+typeName);
-			console.log(htmlTopicName+'_'+typeName);
 			if(element != undefined){
+				// Now we check what the data received is containing and we fill the element with this data
 				if(data.rate != undefined){
 					element.innerHTML = data.rate.toFixed(2) + " Hz";
+					// If it is a rate and if it is linked to an image then we can add it to the rate chart of the image
 					if(htmlTopicName.indexOf("image") !== -1){
 						if(currentPage.indexOf("image")!= -1){
 							addNewRateToChart(data.rate.toFixed(2));
@@ -213,7 +221,6 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 				}
 				if(data.lidarData != undefined){
 					if(currentPage.indexOf("lidar")!= -1){
-						console.log("drawing");
 						drawLidarChart(data.lidarData);
 					}
 				}			
@@ -246,27 +253,26 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 			}	
         },
         error: function(xhr, status, error) {
+			// This function is triggered if there was an error with the request
             var err = eval("(" + xhr.responseText + ")");
-            //console.log("Error");
-            //console.log(xhr);
-            //console.log(status);
-            //console.log(error);
         }
     });
 }
 
 var topics = null;
 
+// This function is asking the server for the different topics available
 function askForTopics() {
     $.ajax({
         url: "http://" + ipAddress + "/topics",
         type: "GET",
         success: function(data) {
 			topics = data;
+			// For each topic, add that it is currently subscribed
 			for (var topicName in topics) {
 				topics[topicName] = {topic: topics[topicName], subscribed: true};
 			}
-			console.log(topics);
+			// set subscription of the different topics depending on the current page
 			subscribeToRightTopicsForCurrentPage(currentPage);	
         },
         error: function(xhr, status, error) {
@@ -275,6 +281,7 @@ function askForTopics() {
     });
 }
 
+// Send to the server a request to change the subscription to a topic
 function setSubscribtion(path, topicName) {
     $.ajax({
         url: "http://" + ipAddress + "/" + path,
@@ -283,19 +290,14 @@ function setSubscribtion(path, topicName) {
             key: topicName
         },
         success: function(data) {
-            //console.log("Success");
-            //console.log(data);
         },
         error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");
-            //console.log("Error");
-            //console.log('Request Status: ' + xhr.status + ' Status Text: ' + xhr.statusText + ' ' + xhr.responseText);
-            //console.log(status);
-            //console.log(error);
         }
     });
 }
 
+// Publish a message to a topic by sending a request to the server
 function publishMessage(messageToPublish){
 	$.ajax({
         url: "http://" + ipAddress + "/" + "publishToTopic",
@@ -314,7 +316,7 @@ function publishMessage(messageToPublish){
     });
 }
 
-
+// Update the image at the given element with the given data
 function updateImage(data, element){
 	// Looking for where is the array with data; +6 is to start the string at "[" and not at "data"
     uintAsString = data.substring(data.indexOf("data: [") + 6);
@@ -340,7 +342,7 @@ function Uint8ToString(u8a) {
 
 function unsubscribe(htmlTopicName) {
 	var topicName = getTopicNameFromHtmlTopicName(htmlTopicName);
-	if(topicName != undefined){
+	if(topics[topicName] != undefined){
 		topics[topicName].subscribed = false;
 		setSubscribtion("unsub", topicName);
 	}
@@ -348,7 +350,7 @@ function unsubscribe(htmlTopicName) {
 
 function subscribe(htmlTopicName) {
 	var topicName = getTopicNameFromHtmlTopicName(htmlTopicName);
-	if(topicName != undefined){
+	if(topics[topicName] != undefined){
 		topics[topicName].subscribed = true;
     	setSubscribtion("sub", topicName);
 	}
