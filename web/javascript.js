@@ -1,4 +1,5 @@
 var ipAddress;
+var refreshTime;
 
 var isLidarPolarChartSet;
 var lidarPolarAreaChart;
@@ -27,23 +28,25 @@ TypeOfData = {
 // This function is triggered at the loading of any of the page of the web app
 window.onload = function start() {
 	ipAddress ="192.93.8.105:8000";
+	refreshTime = 1000;
 	currentPage = document.getElementById("page_id").getAttribute("value");
 	console.log(currentPage);
+	// This function will get all the topics from the server (see SP_Server.py file and look for self.path == '/topics': to see what's sent)
 	askForTopics();
-    setInterval(updateTopicValues, 1000);
+	// This is going to ask for topics value every refreshTime. RefreshTime is in milliseconds
+    setInterval(updateTopicValues, refreshTime);
 	
 	// Depending on the page you are on, do different things
 	if(currentPage.indexOf("index")!= -1){
 		$('input[type=checkbox]').change(function(){
 			changeActivity(this.parentNode);
 		});
-
 		$('input[type=checkbox]').prop('checked', true);
 
 		$( "#postAMessage" ).click(function() {
-		  publishMessage(1);
+			console.log('clicked publish');		 
+			publishMessage(1);
 		});
-
 		$(".link_new_page").click(function() {
 			if(this.parentNode.parentNode.getAttribute("id").indexOf('image') != -1){
 				currentCamera = this.parentNode.parentNode.getAttribute("id");
@@ -59,7 +62,7 @@ window.onload = function start() {
 		var imageRate = document.getElementById('image_rate');
 		imageRate.setAttribute("id", currentCamera);
 		var imageRateValue = document.getElementById('image_rate_value');
-		imageRateValue.setAttribute("id", currentCamera+"_rate");
+		imageRateValue.setAttribute("id", currentCamera+"_rate_rate");
 
 		imageRateLineCanvas = document.getElementById("imageRateLineCanvas");
 		isImageRateChartSet = false;
@@ -70,10 +73,6 @@ window.onload = function start() {
 		lidarPolarCanvas = document.getElementById("lidarPolarCanvas");
 		isLidarPolarChartSet = false;
 	}
-
-	$(window).bind('beforeunload', function(){
-  		unsubscribeFromCurrentTopics();
-	});
 }
 
 function initLineChart() {
@@ -182,6 +181,10 @@ function updateTopicValues() {
 		var typesOfData = topics[topicName].topic.types;
 		if(topics[topicName].subscribed){
 			for(var typeOfData in typesOfData) {
+				//console.log(topics[topicName].topic.htmlTopicName);
+				//if(topics[topicName].topic.htmlTopicName.indexOf("image") != -1 || topics[topicName].topic.htmlTopicName.indexOf("lidar") != -1){
+					//if(typesOfData[typeOfData]!=0){
+						//if(currentPage.indexOf("index")!= -1){
 				askForData(topicName, topics[topicName].topic.htmlTopicName, typesOfData[typeOfData]);
 			}
 		}
@@ -198,10 +201,11 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 			// select the html element that matches the htmlTopicName and the type of data
 			var typeName = getTypeNameFromId(typeOfData);
 			var element = document.getElementById(htmlTopicName+'_'+typeName);
+			console.log(htmlTopicName+'_'+typeName);
 			if(element != undefined){
 				if(data.rate != undefined){
 					element.innerHTML = data.rate.toFixed(2) + " Hz";
-					if(topics[topicName].topic.types.indexOf(TypeOfData.IMAGE_M.id) !== -1){
+					if(htmlTopicName.indexOf("image") !== -1){
 						if(currentPage.indexOf("image")!= -1){
 							addNewRateToChart(data.rate.toFixed(2));
 						}		
@@ -214,7 +218,7 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 					}
 				}			
 				if(typeOfData == TypeOfData.IMAGE_L.id || typeOfData == TypeOfData.IMAGE_M.id || typeOfData == TypeOfData.IMAGE_R.id){
-					if(currentPage.indexOf("image")!= -1){
+					if(currentPage.indexOf("image")!= -1 || currentPage.indexOf("all_cameras")!= -1){
 						updateImage(data, element);
 					}
 				}
@@ -235,8 +239,8 @@ function askForData(topicName, htmlTopicName, typeOfData) {
 				}
 				if(data.size_mb != undefined){
 					var elements = element.getElementsByClassName("topicValue");
-					var percentage = data.available_mb/data.size_mb
-					elements[0].innerHTML = data.available_mb.toFixed(2);
+					var percentage = (data.available_mb/data.size_mb)*100;
+					elements[0].innerHTML = data.available_mb.toFixed(0) +" Mb";
 					elements[1].innerHTML = percentage.toFixed(2)+"%";
 				}
 			}	
@@ -262,7 +266,8 @@ function askForTopics() {
 			for (var topicName in topics) {
 				topics[topicName] = {topic: topics[topicName], subscribed: true};
 			}
-			console.log(topics);	
+			console.log(topics);
+			subscribeToRightTopicsForCurrentPage(currentPage);	
         },
         error: function(xhr, status, error) {
             
@@ -334,26 +339,40 @@ function Uint8ToString(u8a) {
 }
 
 function unsubscribe(htmlTopicName) {
-	console.log(htmlTopicName);
 	var topicName = getTopicNameFromHtmlTopicName(htmlTopicName);
-	console.log("2- " + topicName);
-	topics[topicName].subscribed = false;
-    setSubscribtion("unsub", topicName);
+	if(topicName != undefined){
+		topics[topicName].subscribed = false;
+		setSubscribtion("unsub", topicName);
+	}
 }
 
 function subscribe(htmlTopicName) {
 	var topicName = getTopicNameFromHtmlTopicName(htmlTopicName);
-	topics[topicName].subscribed = true;
-    setSubscribtion("sub", topicName);
+	if(topicName != undefined){
+		topics[topicName].subscribed = true;
+    	setSubscribtion("sub", topicName);
+	}
 }
 
-function unsubscribeFromCurrentTopics(){
-
+function subscribeToRightTopicsForCurrentPage(page){
+	if(page.indexOf("index")!= -1){
+		unsubscribe("image_l");
+		unsubscribe("image_m");
+		unsubscribe("image_r");
+	}
+	if(page.indexOf("image")!= -1){
+		subscribe(currentCamera);
+	}
+	if(page.indexOf("all_cameras")!= -1){
+		subscribe("image_l");
+		subscribe("image_m");
+		subscribe("image_r");
+	}
 }
 
 function getTopicNameFromHtmlTopicName(htmlTopicName){
 	for (var topicName in topics) {
-		if(topics[topicName].topic.htmlTopicName.indexOf(htmlTopicName) != -1){
+		if(topics[topicName].topic.htmlTopicName.localeCompare(htmlTopicName) == 0){
 			return topicName;
 		}
 	}

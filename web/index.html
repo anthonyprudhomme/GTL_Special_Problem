@@ -7,46 +7,62 @@
         <link rel="stylesheet" type="text/css" href="style.css"/>
         <link rel="stylesheet" type="text/css" href="bootstrap/dist/css/bootstrap.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+
         <script src="Chart.bundle.js"></script>
+		<script src="jquery.js"></script>
+        <script src="javascript.js"></script>
+        <script src="bootstrap/dist/js/bootstrap.min.js"></script>
+
         <title>Special Problem App</title>
     </head>
     <body>
-        <script src="jquery.js"></script>
-        <script src="javascript.js"></script>
-        <script src="bootstrap/dist/js/bootstrap.min.js"></script>
-		
+        
         <div class="container">
+
 			<div id="page_id" value="index"><div>
+
             <div class="row">
                 <div class="col-12">Initialized</div>
             </div>
+
+			<div class="row">
+                <div class="col-12"><a href="all_cameras.html" class="link_new_page"> See all three cameras</a></div>
+            </div>
+
+			<!---  ================= Cameras ================= --->
             <div class="row">
+				<!---  ------------- Left Camera ------------- --->
                 <div class="col-4 Lcam" id="image_l">
                     <input type="checkbox" class="leftAlignedCheckbox" checked>
                     <span class="float-md-left" style="padding-left: 10px;"> Left cam </span>
-                    <span class="float-md-right topicValue" id="image_l_rate">No value</span>
+                    <span class="float-md-right topicValue" id="image_l_rate_rate">No value</span>
 					<div> 
 						</br><a href="image.html" class="float-md-right link_new_page"> More</a>
 					</div>
                 </div>
+				<!---  ------------- Middle Camera ------------- --->
                 <div class="col-4 Mcam" id="image_m">
                     <input type="checkbox" class="leftAlignedCheckbox" checked> 
                     <span class="float-md-left" style="padding-left: 10px;"> Middle cam </span>
-                    <span class="float-md-right topicValue" id="image_m_rate">No value</span>
+                    <span class="float-md-right topicValue" id="image_m_rate_rate">No value</span>
 					<div> 
 						</br><a href="image.html" class="float-md-right link_new_page"> More</a>
 					</div>
                 </div>
+				<!---  ------------- Right Camera ------------- --->
                 <div class="col-4 Rcam" id="image_r">
                     <input type="checkbox" class="leftAlignedCheckbox" checked>
                     <span class="float-md-left" style="padding-left: 10px;"> Right cam </span>
-                    <span class="float-md-right topicValue" id="image_r_rate">No value</span>
+                    <span class="float-md-right topicValue" id="image_r_rate_rate">No value</span>
 					<div> 
 						</br><a href="image.html" class="float-md-right link_new_page"> More</a>
 					</div>
                 </div>
             </div>
+
+			<!---  ================= Imu ================= --->
             <div id="imu_imu">
+				<!---  ------------- Accel ------------- --->
                 <div class="row">
                     <div class="col-3 " id="imu">
                         <input type="checkbox" checked class="leftAlignedCheckbox">Accel.
@@ -61,6 +77,7 @@
                         <span class="float-md-right topicValue">No value</span>
                     </div>
                 </div>
+				<!---  ------------- Gyro ------------- --->
                 <div class="row">
                     <div class="col-3">
                         Gyro.
@@ -76,6 +93,8 @@
                     </div>
                 </div>
             </div>
+
+			<!---  ================= GPS ================= --->
             <div class="row" id="gps_gps">
                 <div class="col-4 float-md-left" style="text-align:left; padding-left: 25px;" id="gps">
                     <input type="checkbox" class="leftAlignedCheckbox" checked> Lat.
@@ -90,18 +109,23 @@
                     <div class="float-md-right topicValue longValue">No value</div>
                 </div>
             </div>
+
+			<!---  ================= Battery ================= --->
+<!---  
             <div class="row">
                 <div class="col-4 " id="batteryPercentage"> <input type="checkbox" class="leftAlignedCheckbox" checked> Bat %</div>
                 <div class="col-4 " id="batteryVoltage"> <input type="checkbox" class="leftAlignedCheckbox" checked> Bat voltage</div>
                 <div class="col-4 " id="cpu"> <input type="checkbox" class="leftAlignedCheckbox" checked> CPU</div>
             </div>
+--->
+			<!---  ================= Disk Space ================= --->
             <div class="row" id="disk_space_disk_space" >
-                <div class="col-4 " id="diskSpaceAvailable">
-                    <span class="float-md-left" style="padding-left: 10px;"> <input type="checkbox" class="leftAlignedCheckbox" checked> Disk space available </span>
+                <div class="col-4 float-md-left" style="text-align:left; padding-left: 25px;" id="disk_space">
+                    <input type="checkbox" class="leftAlignedCheckbox" checked> Mb Avail. </span>
                     <span class="float-md-right topicValue">No value</span>
                 </div>
                 <div class="col-4 " id="diskSpacePercentage">
-                    <span class="float-md-left" style="padding-left: 10px;"> <input type="checkbox" class="leftAlignedCheckbox" checked> Percentage </span>
+                    <span class="float-md-left" style="padding-left: 10px;">% Avail. </span>
                     <span class="float-md-right topicValue">No value</span>
                 </div>
                 <div class="col-4 Lidar" id="lidar">
@@ -110,9 +134,13 @@
 					</br><a href="lidar.html" class="float-md-right link_new_page"> More</a>
                 </div>
             </div>
+
+			<!---  ================= Output nmessages ================= --->
             <div class="row">
                 <div class="col-12">This is where the messages will be displayed</div>
             </div>
+
+			<!---  ================= Message posting ================= --->
             <div class="row">
                 <div class="col-12" id="postAMessage">Send a message</div>
             </div>

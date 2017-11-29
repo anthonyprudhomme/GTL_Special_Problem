@@ -12,6 +12,7 @@ import rospy
 
 from std_msgs.msg import String
 
+from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import CompressedImage
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
@@ -125,6 +126,7 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	        data['available_mb'] = subscribers[self.topicName].lastData.available_mb
 	        json_data = json.dumps(data)
 	        self.wfile.write(json_data)
+		return
 
 	if self.path == '/topics':
             self.send_response(200)
@@ -155,7 +157,7 @@ class SPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	    subscribers[parse_qs(self.data_string)['key'][0]].customSubscriber = CustomSubscriber(customSub.topicName,customSub.topicType, customSub.typesOfData,  customSub.callback, customSub.htmlTopicName)
 
 	if self.path == '/publishToTopic':
-	    print "should publish"
+	    print "Has published something"
 	    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
 	    topicName = parse_qs(self.data_string)['topicName'][0]
 	    messageToPublish = parse_qs(self.data_string)['message'][0]
@@ -191,18 +193,21 @@ def callback(data, args):
 	#rospy.loginfo(rospy.get_caller_id() + 'I received battery data')
 
     if TypeOfData.DISK_SPACE in args[1]:
-	rospy.loginfo(rospy.get_caller_id() + 'I received disk space data')
+	subscribers[args[0]].lastData = data
+	#rospy.loginfo(rospy.get_caller_id() + 'I received disk space data')
     
 #---------------------------------------
 
 def subscribeToTopics():
     rospy.init_node('listener', anonymous=True)
     
-    subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback, "image_m"))
+    subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.IMAGE_M], callback, "image_m"))
+    subscribers['vrep/visionSensorInfo'] = SubscriberManager(CustomSubscriber('vrep/visionSensorInfo', CameraInfo, [TypeOfData.RATE], callback, "image_m_rate"))
     subscribers['lidar/scan'] = SubscriberManager(CustomSubscriber('lidar/scan', LaserScan, [TypeOfData.RATE,TypeOfData.LIDAR], callback, "lidar"))
     subscribers['vectornav/imu'] = SubscriberManager(CustomSubscriber('vectornav/imu', sensors, [TypeOfData.IMU], callback, "imu"))
     subscribers['vectornav/ins'] = SubscriberManager(CustomSubscriber('vectornav/ins', ins, [TypeOfData.GPS], callback, "gps"))
     subscribers['disk_monitor/disk'] = SubscriberManager(CustomSubscriber('disk_monitor/disk', DiskStatus, [TypeOfData.DISK_SPACE], callback, "disk_space"))
+	#subscribers['vrep/visionSensor/compressed'] = SubscriberManager(CustomSubscriber('vrep/visionSensor/compressed', CompressedImage, [TypeOfData.RATE,TypeOfData.IMAGE_M], callback, "image_m"))
     #subscribers['/camera1/image_raw'] = SubscriberManager(CustomSubscriber('/camera1/image_raw', Image, [TypeOfData.RATE], callback, "image_l"))
     #subscribers['/camera1/image_color/compressed'] = SubscriberManager(CustomSubscriber('/camera1/image_color/compressed', CompressedImage, [TypeOfData.IMAGE_L], callback, "image_l"))
     #subscribers['/camera3/image_raw'] = SubscriberManager(CustomSubscriber('/camera3/image_raw', Image, [TypeOfData.RATE,TypeOfData.IMAGE_R], callback))
